@@ -1,7 +1,7 @@
 import unittest
 
-from domain.indexing import EmbeddingInput
-from domain.indexing import EmbeddingService
+from infrastructure.indexing import EmbeddingInput
+from infrastructure.indexing import EmbeddingService
 from shared.settings import Settings
 
 class TestEmbedding(unittest.TestCase):
@@ -18,7 +18,7 @@ class TestEmbedding(unittest.TestCase):
             inputs=inputs
         )
 
-        print(result.sparse_embeddings[0])
+        print(result)
 
 if __name__ == '__main__':
     unittest.main()

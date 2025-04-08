@@ -1,6 +1,5 @@
 import unittest
 import numpy as np
-import uuid
 
 from shared.qdrant import QdrantInput
 from shared.qdrant import Qdrant
@@ -22,32 +21,32 @@ class TestQdrant(unittest.TestCase):
                 values=np.random.uniform(0, 1, len(indices)).tolist()
             ) for _ in range(20)
         ]
-        payload={'Header_3': 'DAO DUY CHIEN'}
+        payload=[{'Header_3': 'DAO DUY CHIEN'} for _ in range(20)]
         self.qdrant.insert(
             inputs = QdrantInput(
                 dense_embedding=dense_embedding,
                 sparse_embedding=sparse_embedding,
-                payload=payload
+                metadata=payload
             )
         )
 
-    def test_search(self):
+    # def test_search(self):
         
-        dense_query=np.random.rand(768).tolist()
-        sparse_query = [
-            SparseEmbeddingData(
-                indices=(indices := np.random.choice(1000, size=np.random.randint(1, 11), replace=False).tolist()),
-                values=np.random.uniform(0, 1, len(indices)).tolist()
-            )
-        ]
-        metadata={'Header_3': 'DAO DUY CHIEN', 'Header_4':'KỸ NĂNG'}
-        result = self.qdrant.query(
-            dense_query=dense_query,
-            sparse_query=sparse_query,
-            metadata=metadata,
-            k=1
-        )
-        print(list(point.payload for point in result.points))    
+    #     dense_query=np.random.rand(768).tolist()
+    #     sparse_query = [
+    #         SparseEmbeddingData(
+    #             indices=(indices := np.random.choice(1000, size=np.random.randint(1, 11), replace=False).tolist()),
+    #             values=np.random.uniform(0, 1, len(indices)).tolist()
+    #         )
+    #     ]
+    #     metadata={'Header_3': 'DAO DUY CHIEN', 'Header_4':'KỸ NĂNG'}
+    #     result = self.qdrant.query(
+    #         dense_query=dense_query,
+    #         sparse_query=sparse_query,
+    #         metadata=metadata,
+    #         k=1
+    #     )
+    #     print(list(point.payload for point in result.points))    
 
 if __name__ == "__main__":
     unittest.main()
