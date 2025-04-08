@@ -22,7 +22,7 @@ class RetrievalService(BaseService):
     def _get_qdrant(self) -> Qdrant:
         return Qdrant(settings=self.settings)
 
-    def retrieve(self, inputs: RetrievalInput) -> RetrievalOutput:
+    def process(self, inputs: RetrievalInput) -> RetrievalOutput:
         """Retrieve documents from the database based on the query.
 
         Args:

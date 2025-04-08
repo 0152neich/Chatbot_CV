@@ -50,4 +50,3 @@ class GenerationService(BaseService):
         })
 
         return GenerationOutput(respone=response.content)
-

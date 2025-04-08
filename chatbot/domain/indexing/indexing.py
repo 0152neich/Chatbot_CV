@@ -8,31 +8,35 @@ from infrastructure.indexing import DocumentProcessor
 
 from shared.base import BaseModel
 from shared.base import BaseService
-from shared.sparse_embedding import SparseEmbeddingData
 from shared.settings import Settings
+from shared.qdrant import Qdrant
+from shared.qdrant import QdrantInput
 
 logger = logging.getLogger(__name__)
 
-class IndexingInput(BaseModel):
-    file_path: str
-
 class IndexingOutput(BaseModel):
-    dense_embeddings: list[float]
-    sparse_embeddings: list[SparseEmbeddingData]
+    status: bool
 
 class IndexingService(BaseService):
     setting: Settings
 
+    @property
     def _get_convert(self) -> DocumentProcessor:
         return DocumentProcessor()
     
+    @property
     def _get_chunker(self) -> Chunker:
         return Chunker(setting=self.setting)
     
+    @property
     def _get_embedding(self) -> EmbeddingService:
         return EmbeddingService(setting=self.setting)
     
-    def process(self, inputs: IndexingInput) -> IndexingOutput:
+    @property
+    def _get_qdrant(self) -> Qdrant:
+        return Qdrant(setting=self.setting)
+    
+    def process(self) -> IndexingOutput:
         """Process the input file and return the indexing output.
         
         Args:
@@ -43,26 +47,39 @@ class IndexingService(BaseService):
         """
         # Convert the file to text
         try:
-            document_processor = self._get_convert()
-            text = document_processor.process_all()
+            text = self._get_convert.process_all()
+            logger.info("File converted to text successfully.")
         except Exception as e:
             logger.error(f"Error processing file: {e}")
             raise e
         
         # Chunk the text
         try:
-            chunker = self._get_chunker()
-            chunks = chunker.process(ChunkInput(file_path=inputs.file_path))
+            chunks_output = self._get_chunker.process()
+            logger.info("Text chunked successfully.")
         except Exception as e:
             logger.error(f"Error chunking text: {e}")
             raise e
         
         # Embed the chunks
-        embedding_service = self._get_embedding()
-        embeddings = embedding_service.process(EmbeddingInput(chunks=chunks.chunks))
-        
-        # Return the indexing output
-        return IndexingOutput(
-            dense_embeddings=embeddings.dense_embeddings,
-            sparse_embeddings=embeddings.sparse_embeddings,
-        )
+        try:
+            embeddings = self._get_embedding.process(EmbeddingInput(chunks=chunks_output.chunks))
+            logger.info("Chunks embedded successfully.")
+        except Exception as e:
+            logger.error(f"Error embedding chunks: {e}")
+            raise e
+
+        # Store the embeddings in Qdrant
+        try:
+            self._get_qdrant.insert(
+                QdrantInput(
+                    dense_embeddings=embeddings.dense_embeddings,
+                    sparse_embeddings=embeddings.sparse_embeddings,
+                    payload=embeddings.metadata
+                )
+            )
+            logger.info("Embeddings stored successfully.")
+            return IndexingOutput(status=True)
+        except Exception as e:
+            logger.error(f"Error storing embeddings: {e}")
+            raise e
