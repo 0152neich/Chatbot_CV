@@ -15,8 +15,9 @@ class EmbeddingInput(BaseModel):
     chunks: List[Dict[str, Any]]
 
 class EmbeddingOutput(BaseModel):
-    dense_embeddings: List[Dict[str, Any]]
+    dense_embeddings: List[List[float]]
     sparse_embeddings: List[SparseEmbeddingData]
+    metadata: List[Dict[str, Any]]
 
 class EmbeddingService(BaseService):
     setting: Settings
@@ -126,12 +127,17 @@ class EmbeddingService(BaseService):
         sparse_embeddings = self._get_sparse_embedding(texts)
 
         # Add dense embeddings to chunks
-        dense_embeddings = [
-            {**chunk, "embedding": embedding}
-            for chunk, embedding in zip(valid_chunks, dense_embeddings_raw)
+        # dense_embeddings = [
+        #     {"embedding": embedding}
+        #     for embedding in dense_embeddings_raw
+        # ]
+        metadata = [
+            {"content": chunk["content"], "metadata": chunk.get("metadata", {})}
+            for chunk in valid_chunks
         ]
         
         return EmbeddingOutput(
-            dense_embeddings=dense_embeddings,
-            sparse_embeddings=sparse_embeddings
+            dense_embeddings=dense_embeddings_raw,
+            sparse_embeddings=sparse_embeddings,
+            metadata=metadata
         )

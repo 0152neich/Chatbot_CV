@@ -1,13 +1,11 @@
 import re
+import os
 from typing import Any, Dict, List
 from langchain_text_splitters import RecursiveCharacterTextSplitter, MarkdownHeaderTextSplitter
 
 from shared.base import BaseModel
 from shared.base import BaseService
 from shared.settings import Settings
-
-class ChunkInput(BaseModel):
-    file_path: str
 
 class ChunkOutput(BaseModel):
     chunks: List[Dict[str, Any]]
@@ -65,27 +63,33 @@ class Chunker(BaseService):
         text = re.sub(r'^-| - ·\s*', '', text)
         return text.strip()
 
-    def process(self, inputs: ChunkInput) -> ChunkOutput:
+    def process(self) -> ChunkOutput:
         """Process the Markdown file by splitting based on headers and further chunking.
-        
-        Args:
-            file_path (str): Path to the Markdown file.
         
         Returns:
             list[str]: List of text chunks.
         """
-        try:
-            with open(inputs.file_path, 'r', encoding='utf-8') as file:
-                content = file.read()
-        except FileNotFoundError:
-            raise FileNotFoundError(f"File not found: {inputs.file_path}")
-        except Exception as e:
-            raise Exception(f"Error reading file {inputs.file_path}: {str(e)}")
+        folder_path = self.setting.chunking.folder_path
+        if not os.path.isdir(folder_path):
+            raise FileNotFoundError(f"Folder not found: {folder_path}")
+
+        final_chunks = []
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            if not os.path.isfile(file_path) or not filename.lower().endswith('.md'):
+                continue
+
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+            except FileNotFoundError:
+                raise FileNotFoundError(f"File not found: {file_path}")
+            except Exception as e:
+                raise Exception(f"Error reading file {file_path}: {str(e)}")
         
         content = self.clean_text(content)
         header_docs = self._get_markdown_headers(content)
         
-        final_chunks = []
         for doc in header_docs:
             text = doc.page_content
             chunks = self._get_recusive_splitter(text)
@@ -93,7 +97,10 @@ class Chunker(BaseService):
                 if chunk.strip():
                     chunk_dict = {
                         "content": chunk,
-                        "metadata": doc.metadata
+                        "metadata": {
+                            **doc.metadata,
+                            "file_path": file_path
+                        }
                     }
                     final_chunks.append(chunk_dict)
         
