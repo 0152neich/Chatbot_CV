@@ -13,7 +13,7 @@ from shared.sparse_embedding import SparseEmbeddingData
 class QdrantInput(BaseModel):
     dense_embedding: List[List[float]]
     sparse_embedding: List[SparseEmbeddingData]
-    payload: Dict[str, Any]
+    metadata: List[Dict[str, Any]]
 
 class Qdrant(BaseService):
     settings: Settings
@@ -51,6 +51,7 @@ class Qdrant(BaseService):
         """
         collection=self.collection
         collection_name = self.settings.qdrant.name
+
         points = [
             models.PointStruct(
                 id=str(uuid.uuid4()),
@@ -61,7 +62,7 @@ class Qdrant(BaseService):
                         values=inputs.sparse_embedding[i].values
                     )
                 },
-                payload=inputs.payload
+                payload=inputs.metadata[i]
             )
             for i in range(len(inputs.dense_embedding))
         ]
