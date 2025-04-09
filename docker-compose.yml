@@ -1,0 +1,21 @@
+services:
+  qdrant:
+    image: qdrant/qdrant
+    ports:
+      - 6333:6333
+      - 6334:6334
+    networks:
+      - app-tier
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT_NAME=${QDRANT__NAME}
+      - QDRANT_VECTOR_SIZE=${QDRANT__VECTOR_SIZE}
+
+
+networks:
+  app-tier:
+    driver: bridge
+    
+volumes:
+  qdrant_data:
