@@ -8,7 +8,6 @@ from domain.retrieval import RetrievalService
 from domain.generation import GenerationService
 from domain.generation import GenerationInput
 from shared.qdrant import Qdrant
-from shared.qdrant import QdrantInput
 
 logger = logging.getLogger(__name__)
 
@@ -77,5 +76,5 @@ class ChatbotService(BaseService):
             logger.error(f"Error generating response: {e}")
             raise e
         
-        return ChatbotOutput(response=generation_output.respone)
+        return ChatbotOutput(response=generation_output.response)
         
