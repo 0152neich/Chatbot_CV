@@ -15,7 +15,7 @@ class GenerationOutput(BaseModel):
     response: str
 
 class GenerationService(BaseService):
-    setting: Settings
+    settings: Settings
 
     def process(self, inputs: GenerationInput) -> GenerationOutput:
         """Generate a response based on the input query and chat history.
@@ -28,11 +28,11 @@ class GenerationService(BaseService):
         """
         try:
             llm = ChatOpenAI(
-                model=self.setting.generation.model,
-                temperature=self.setting.generation.temperature,
-                max_tokens=self.setting.generation.max_tokens,
+                model=self.settings.generation.model,
+                temperature=self.settings.generation.temperature,
+                max_tokens=self.settings.generation.max_tokens,
                 streaming=True,
-                api_key=self.setting.generation.api_key,
+                api_key=self.settings.generation.api_key,
             )
             prompt = ChatPromptTemplate.from_messages([
                 ("system", "You are an expert at AI. Your name is ChatAI. Use the retrieved information to answer accurately."),
