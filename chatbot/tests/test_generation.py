@@ -7,7 +7,7 @@ class TestGeneration(unittest.TestCase):
 
     def setUp(self):
         self.settings = Settings()
-        self.generation_service = GenerationService(setting=self.settings)
+        self.generation_service = GenerationService(settings=self.settings)
 
     def test_generate_response(self):
         inputs = GenerationInput(

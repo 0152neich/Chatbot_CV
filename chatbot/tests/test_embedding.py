@@ -1,14 +1,14 @@
 import unittest
 
-from infrastructure.indexing import EmbeddingInput
-from infrastructure.indexing import EmbeddingService
+from domain.indexing import EmbeddingInput
+from domain.indexing import EmbeddingService
 from shared.settings import Settings
 
 class TestEmbedding(unittest.TestCase):
 
     def setUp(self):
         self.settings = Settings()
-        self.embedding = EmbeddingService(setting=self.settings)
+        self.embedding = EmbeddingService(settings=self.settings)
 
     def test_embed_chunks(self):
         inputs = EmbeddingInput(chunks=[{'content': 'KỸ SƯ TRÍ TUỆ NHÂN TẠO (AI ENGINEER)  \nEmail: duychien25102004@gmail.com  \nĐiện thoại: 0854013616  \nĐịa chỉ: Thành phố Thanh Hóa, Thanh Hóa  \nGitHub: 0152neich - (https://github.com/0152neich)', 'metadata': {'Header_3': 'ĐÀO DUY CHIẾN'}},

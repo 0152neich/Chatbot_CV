@@ -1,7 +1,7 @@
-from infrastructure.indexing import Chunker
+from domain.indexing import Chunker
 from shared.settings import Settings
 
-chunker = Chunker(setting=Settings())
+chunker = Chunker(settings=Settings())
 chunk = chunker.process()
 
 for c in chunk.chunks:

@@ -11,8 +11,8 @@ from shared.settings import Settings
 from shared.sparse_embedding import SparseEmbeddingData
 
 class QdrantInput(BaseModel):
-    dense_embedding: List[List[float]]
-    sparse_embedding: List[SparseEmbeddingData]
+    dense_embeddings: List[List[float]]
+    sparse_embeddings: List[SparseEmbeddingData]
     metadata: List[Dict[str, Any]]
 
 class Qdrant(BaseService):
@@ -56,15 +56,15 @@ class Qdrant(BaseService):
             models.PointStruct(
                 id=str(uuid.uuid4()),
                 vector={
-                    "dense": inputs.dense_embedding[i],
+                    "dense": inputs.dense_embeddings[i],
                     "sparse": models.SparseVector(
-                        indices=inputs.sparse_embedding[i].indices,
-                        values=inputs.sparse_embedding[i].values
+                        indices=inputs.sparse_embeddings[i].indices,
+                        values=inputs.sparse_embeddings[i].values
                     )
                 },
                 payload=inputs.metadata[i]
             )
-            for i in range(len(inputs.dense_embedding))
+            for i in range(len(inputs.dense_embeddings))
         ]
 
         self.client.upsert(
