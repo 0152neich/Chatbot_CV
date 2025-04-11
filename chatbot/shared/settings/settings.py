@@ -9,6 +9,7 @@ from .models.embedding import EmbeddingSettings
 from .models.chunking import ChunkSettings
 from .models.qdrant import QdantSettings
 from .models.generation import GenerationSettings
+from .models.retrieval import RetrevalSettings
 
 load_dotenv(find_dotenv('.env'), override=True)
 
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     embedding: EmbeddingSettings
     qdrant: QdantSettings
     generation: GenerationSettings
+    retrieval: RetrevalSettings
 
     class Config:
         env_nested_delimiter = '__'
