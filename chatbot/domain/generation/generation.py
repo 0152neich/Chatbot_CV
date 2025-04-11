@@ -37,14 +37,14 @@ class GenerationService(BaseService):
             prompt = ChatPromptTemplate.from_messages([
             ("system", 
                 "Trả lời câu hỏi về CV chỉ dựa trên thông tin trong tài liệu. "
-                "Trả lời ngắn gọn, chính xác. Nếu không có thông tin, nói 'Không có thông tin trong CV.'"),
+                "Trả lời ngắn gọn, chính xác. Nếu không có thông tin hoặc thông tin không liên qian, nói 'Không có thông tin trong CV.'"),
             MessagesPlaceholder(variable_name="chat_history"),
             ("human", "{retrieved_info}\nCâu hỏi: {input}")
             ])
             retrieved_info_str = "\n".join(
                 [f"Content: {doc.get('content', 'N/A')}\nMetadata: {doc.get('metadata', 'N/A')}" 
                 for doc in inputs.retrieved_info]
-            ) if inputs.retrieved_info else "Không có thông tin trong CV."
+            )
 
             chain = prompt | llm
             response = chain.invoke({
