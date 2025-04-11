@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 
-from shared.qdrant import QdrantInput
-from shared.qdrant import Qdrant
+from infrastructure.qdrant import QdrantInput
+from infrastructure.qdrant import Qdrant
 from shared.settings import Settings
 from shared.sparse_embedding import SparseEmbeddingData
 
@@ -39,11 +39,11 @@ class TestQdrant(unittest.TestCase):
                 values=np.random.uniform(0, 1, len(indices)).tolist()
             )
         ]
-        metadata={'Header_3': 'DAO DUY CHIEN', 'Header_4':'KỸ NĂNG'}
+        user_name = 'DAO DUY CHIEN'
         result = self.qdrant.query(
             dense_query=dense_query,
             sparse_query=sparse_query,
-            metadata=metadata,
+            user_name=user_name,
             k=5
         )
         print(list(point.payload for point in result.points))    

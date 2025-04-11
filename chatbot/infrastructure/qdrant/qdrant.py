@@ -73,7 +73,7 @@ class Qdrant(BaseService):
             wait=True
         )
 
-    def query(self, dense_query: List[float], sparse_query: List[SparseEmbeddingData], metadata: Dict[str, Any], k: int):
+    def query(self, dense_query: List[float], sparse_query: List[SparseEmbeddingData], user_name: str, k: int):
         """Search for points in the Qdrant collection based on a query vector and metadata filter.
 
         Args:
@@ -88,8 +88,11 @@ class Qdrant(BaseService):
                 on the number of matching points in the collection.
         """
         collection_name = self.settings.qdrant.name
-        key = next(iter(metadata))
-        value = metadata[key]
+        header_keys = [f"Header_{i}" for i in range(1, 5)]
+        filter_conditions = [
+            FieldCondition(key=key, match=MatchValue(value=user_name))
+            for key in header_keys
+        ]
         # query_uint8 = [int(min(max(x * 127.5 + 127.5, 0), 255)) for x in dense_query]
         sparse_dense_rrf_prefetch = models.Prefetch(
             prefetch=[
@@ -127,12 +130,7 @@ class Qdrant(BaseService):
             with_payload=True,
             limit=k,
             query_filter=Filter(
-                must=[
-                    FieldCondition(
-                        key=key,
-                        match=MatchValue(value=value)
-                    )
-                ]
+                should=filter_conditions,
             )
         )
 
