@@ -35,14 +35,16 @@ class GenerationService(BaseService):
                 api_key=self.settings.generation.api_key,
             )
             prompt = ChatPromptTemplate.from_messages([
-                ("system", "You are an expert at AI. Your name is ChatAI. Use the retrieved information to answer accurately."),
-                MessagesPlaceholder(variable_name="chat_history"),
-                ("human", "Retrieved info: {retrieved_info}\n\nUser query: {input}")
+            ("system", 
+                "Trả lời câu hỏi về CV chỉ dựa trên thông tin trong tài liệu. "
+                "Trả lời ngắn gọn, chính xác. Nếu không có thông tin, nói 'Không có thông tin trong CV.'"),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("human", "{retrieved_info}\nCâu hỏi: {input}")
             ])
             retrieved_info_str = "\n".join(
                 [f"Content: {doc.get('content', 'N/A')}\nMetadata: {doc.get('metadata', 'N/A')}" 
                 for doc in inputs.retrieved_info]
-            ) if inputs.retrieved_info else "No relevant information found."
+            ) if inputs.retrieved_info else "Không có thông tin trong CV."
 
             chain = prompt | llm
             response = chain.invoke({

@@ -7,7 +7,7 @@ from .indexing import IndexingService
 from domain.retrieval import RetrievalService
 from domain.generation import GenerationService
 from domain.generation import GenerationInput
-from shared.qdrant import Qdrant
+from infrastructure.qdrant import Qdrant
 
 logger = logging.getLogger(__name__)
 

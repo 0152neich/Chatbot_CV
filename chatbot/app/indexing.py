@@ -8,8 +8,8 @@ from domain.indexing import DocumentProcessor
 from shared.base import BaseModel
 from shared.base import BaseService
 from shared.settings import Settings
-from shared.qdrant import Qdrant
-from shared.qdrant import QdrantInput
+from infrastructure.qdrant import Qdrant
+from infrastructure.qdrant import QdrantInput
 
 logger = logging.getLogger(__name__)
 

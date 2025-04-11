@@ -3,8 +3,9 @@ from typing import List, Dict, Any
 from shared.base import BaseModel
 from shared.base import BaseService
 from shared.settings import Settings
-from shared.qdrant import Qdrant
 from shared.sparse_embedding import SparseEmbeddingData
+from infrastructure.qdrant import Qdrant
+
 
 class RetrievalInput(BaseModel):
     dense_query: List[Dict]
