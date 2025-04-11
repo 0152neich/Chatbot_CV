@@ -8,10 +8,9 @@ from infrastructure.qdrant import Qdrant
 
 
 class RetrievalInput(BaseModel):
-    dense_query: List[Dict]
+    dense_query: List[float]
     sparse_query: List[SparseEmbeddingData]
-    n_results: int
-    filters: Dict[str, Any]
+    user_name: str
 
 class RetrievalOutput(BaseModel):
     context: List[Dict[str, Any]]
@@ -35,8 +34,8 @@ class RetrievalService(BaseService):
         qdrant_outputs = self._get_qdrant.query(
             dense_query=inputs.dense_query,
             sparse_query=inputs.sparse_query,
-            metadata=inputs.filters,
-            k=inputs.n_results
+            user_name=inputs.user_name,
+            k=self.settings.retrieval.top_k,
         )
         
         context = list(qdrant_output.payload for qdrant_output in qdrant_outputs.points)
