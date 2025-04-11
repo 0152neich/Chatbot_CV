@@ -12,7 +12,8 @@ from shared.sparse_embedding import SparseEmbeddingData
 logger = logging.getLogger(__name__)
 
 class EmbeddingInput(BaseModel):
-    chunks: List[Dict[str, Any]]
+    chunks: List[Dict[str, Any]] = []
+    query: str = None
 
 class EmbeddingOutput(BaseModel):
     dense_embeddings: List[List[float]]
@@ -111,25 +112,35 @@ class EmbeddingService(BaseService):
         Returns:
             EmbeddingOutput: EmbeddingOutput object with dense and sparse embeddings
         """
-        if not inputs.chunks:
-            return EmbeddingOutput(dense_embeddings=[], sparse_embeddings=[])
-        
-        # Extract texts from chunks
-        valid_chunks = [chunk for chunk in inputs.chunks if "content" in chunk and isinstance(chunk["content"], str)]
-        if not valid_chunks:
-            logger.warning("No valid chunks to encode")
-            return EmbeddingOutput(dense_embeddings=[], sparse_embeddings=[])
-        
-        texts = [chunk["content"] for chunk in valid_chunks]
-        
-        # Generate embeddings
-        dense_embeddings_raw = self._get_embeddings_batch(texts)
-        sparse_embeddings = self._get_sparse_embedding(texts)
+        if not inputs.chunks and not inputs.query:
+            return EmbeddingOutput(dense_embeddings=[], sparse_embeddings=[], metadata=[])
 
-        metadata = [
-            {"content": chunk["content"], "metadata": chunk.get("metadata", {})}
-            for chunk in valid_chunks
-        ]
+        if inputs.query:
+            dense_embedding = self._get_embeddings_batch([inputs.query]) if inputs.query else None
+            sparse_embedding = self._get_sparse_embedding([inputs.query]) if inputs.query else None
+            return EmbeddingOutput(
+                dense_embeddings=[dense_embedding],
+                sparse_embeddings=[sparse_embedding],
+                metadata=[]
+            )
+        
+        if inputs.chunks:
+            # Extract texts from chunks
+            valid_chunks = [chunk for chunk in inputs.chunks if "content" in chunk and isinstance(chunk["content"], str)]
+            if not valid_chunks:
+                logger.warning("No valid chunks to encode")
+                return EmbeddingOutput(dense_embeddings=[], sparse_embeddings=[], metadata=[])
+            
+            texts = [chunk["content"] for chunk in valid_chunks]
+            
+            # Generate embeddings
+            dense_embeddings_raw = self._get_embeddings_batch(texts)
+            sparse_embeddings = self._get_sparse_embedding(texts)
+
+            metadata = [
+                {"content": chunk["content"], "metadata": chunk.get("metadata", {})}
+                for chunk in valid_chunks
+            ]
         
         return EmbeddingOutput(
             dense_embeddings=dense_embeddings_raw,
