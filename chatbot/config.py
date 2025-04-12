@@ -1,3 +1,3 @@
-DATA_RAW='/home/chien/code/Chatbot_RAG/data/raw'
-DATA_CONVERT='/home/chien/code/Chatbot_RAG/data/convert'
-STATE_FILE='/home/chien/code/Chatbot_RAG/data/convert/processed_state.json'
+DATA_RAW='/data/raw'
+DATA_CONVERT='/data/convert'
+STATE_FILE='/data/convert/processed_state.json'
