@@ -1,5 +1,5 @@
 import logging
-
+from functools import cached_property
 from domain.indexing import EmbeddingService
 from domain.indexing import EmbeddingInput
 from domain.indexing import Chunker
@@ -27,7 +27,7 @@ class IndexingService(BaseService):
     def _get_chunker(self) -> Chunker:
         return Chunker(settings=self.settings)
     
-    @property
+    @cached_property
     def _get_embedding(self) -> EmbeddingService:
         return EmbeddingService(settings=self.settings)
     
@@ -62,7 +62,12 @@ class IndexingService(BaseService):
         
         # Embed the chunks
         try:
-            embeddings = self._get_embedding.process(EmbeddingInput(chunks=chunks_output.chunks))
+            embeddings = self._get_embedding.process(
+                EmbeddingInput(
+                    chunks=chunks_output.chunks,
+                    query=""
+                )
+            )
             logger.info("Chunks embedded successfully.")
         except Exception as e:
             logger.error(f"Error embedding chunks: {e}")
@@ -71,10 +76,10 @@ class IndexingService(BaseService):
         # Store the embeddings in Qdrant
         try:
             self._get_qdrant.insert(
-                QdrantInput(    
+                inputs = QdrantInput(
                     dense_embeddings=embeddings.dense_embeddings,
                     sparse_embeddings=embeddings.sparse_embeddings,
-                    metadata=embeddings.metadata
+                    payload=embeddings.metadata,
                 )
             )
             logger.info("Embeddings stored successfully.")
