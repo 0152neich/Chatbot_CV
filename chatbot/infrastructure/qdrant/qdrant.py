@@ -13,7 +13,7 @@ from shared.sparse_embedding import SparseEmbeddingData
 class QdrantInput(BaseModel):
     dense_embeddings: List[List[float]]
     sparse_embeddings: List[SparseEmbeddingData]
-    metadata: List[Dict[str, Any]]
+    payload: List[Dict[str, Any]]
 
 class Qdrant(BaseService):
     settings: Settings
@@ -62,7 +62,7 @@ class Qdrant(BaseService):
                         values=inputs.sparse_embeddings[i].values
                     )
                 },
-                payload=inputs.metadata[i]
+                payload=inputs.payload[i],
             )
             for i in range(len(inputs.dense_embeddings))
         ]
@@ -106,7 +106,7 @@ class Qdrant(BaseService):
                     # ],
                     query=dense_query, # float
                     using="dense",
-                    limit=5,
+                    limit=10,
                 ),
                 models.Prefetch(
                     query=models.SparseVector(
@@ -114,7 +114,7 @@ class Qdrant(BaseService):
                         values=sparse_query[0].values
                     ),
                     using="sparse",
-                    limit=5,
+                    limit=10,
                 ),
             ],
             query=models.FusionQuery(
