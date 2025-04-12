@@ -11,7 +11,39 @@ services:
     environment:
       - QDRANT_NAME=${QDRANT__NAME}
       - QDRANT_VECTOR_SIZE=${QDRANT__VECTOR_SIZE}
-
+  
+  indexing:
+    build: 
+      context: chatbot
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+    networks:
+      - app-tier
+    volumes:
+      - type: bind
+        source: ./chatbot
+        target: /app
+      - type: bind
+        source: ./data
+        target: /data
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
+    environment:
+      - EMBEDDING__DENSE_MODEL_PATH=${EMBEDDING__DENSE_MODEL_PATH}
+      - EMBEDDING__SPARSE_MODEL_PATH=${EMBEDDING__SPARSE_MODEL_PATH}
+      - EMBEDDING__MAX_TOKEN_LIMIT=${EMBEDDING__MAX_TOKEN_LIMIT}
+      - CHUNKING__CHUNK_SIZE=${CHUNKING__CHUNK_SIZE}
+      - CHUNKING__CHUNK_OVERLAP=${CHUNKING__CHUNK_OVERLAP}
+      - CHUNKING__FOLDER_PATH=${CHUNKING__FOLDER_PATH}
+      - QDRANT__URL=${QDRANT__URL}
+      - QDRANT__PORT=${QDRANT__PORT}
+      - QDRANT__NAME=${QDRANT__NAME}
+      - QDRANT__VECTOR_SIZE=${QDRANT__VECTOR_SIZE}
+      - GENERATION__MODEL=${GENERATION__MODEL}
+      - GENERATION__TEMPERATURE=${GENERATION__TEMPERATURE}
+      - GENERATION__MAX_TOKENS=${GENERATION__MAX_TOKENS}
+      - GENERATION__API_KEY=${GENERATION__API_KEY}
+      - RETRIEVAL__TOP_K=${RETRIEVAL__TOP_K}
 
 networks:
   app-tier:
