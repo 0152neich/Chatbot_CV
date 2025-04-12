@@ -7,6 +7,7 @@ from shared.base import BaseModel
 from shared.base import BaseService
 from shared.settings import Settings
 from shared.state import StateManager
+from shared.clean_text import TextCleaner
 from config import STATE_FILE
 
 class ChunkOutput(BaseModel):
@@ -58,18 +59,6 @@ class Chunker(BaseService):
             is_separator_regex=False
         )
         return recursive_splitter.split_text(text)
-    
-    def clean_text(self, text: str) -> str:
-        """Clean the text by removing extra spaces, newlines, and specific patterns.
-        
-        Args:
-            text (str): Text to clean.
-        
-        Returns:
-            str: Cleaned text.
-        """
-        text = re.sub(r'^-| - ·\s*', '', text)
-        return text.strip()
 
     def process(self) -> ChunkOutput:
         """Process the Markdown file by splitting based on headers and further chunking.
@@ -102,19 +91,26 @@ class Chunker(BaseService):
             except Exception as e:
                 raise Exception(f"Error reading file {file_path}: {str(e)}")
         
-        content = self.clean_text(content)
+        content = TextCleaner.clean_text(content)
         header_docs = self._get_markdown_headers(content)
         
         for doc in header_docs:
             text = doc.page_content
             chunks = self._get_recusive_splitter(text)
+            headers = []
+            for i in range(1, 5):
+                header_key = f"Header_{i}"
+                if header_key in doc.metadata:
+                    headers.append(doc.metadata[header_key])
+            
+            header_str = " > ".join(headers) if headers else ""
             for chunk in chunks:
                 if chunk.strip():
+                    content_with_header = f"{header_str}: {chunk}" if header_str else chunk
                     chunk_dict = {
-                        "content": chunk,
+                        "content": content_with_header,
                         "metadata": {
                             **doc.metadata,
-                            "file_path": file_path
                         }
                     }
                     final_chunks.append(chunk_dict)
