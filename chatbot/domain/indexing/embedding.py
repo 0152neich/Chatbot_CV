@@ -116,11 +116,11 @@ class EmbeddingService(BaseService):
             return EmbeddingOutput(dense_embeddings=[], sparse_embeddings=[], metadata=[])
 
         if inputs.query:
-            dense_embedding = self._get_embeddings_batch([inputs.query]) if inputs.query else None
-            sparse_embedding = self._get_sparse_embedding([inputs.query]) if inputs.query else None
+            dense_embedding = self._get_embeddings_batch([inputs.query])
+            sparse_embedding = self._get_sparse_embedding([inputs.query])
             return EmbeddingOutput(
-                dense_embeddings=[dense_embedding],
-                sparse_embeddings=[sparse_embedding],
+                dense_embeddings=dense_embedding,
+                sparse_embeddings=sparse_embedding,
                 metadata=[]
             )
         
@@ -134,16 +134,19 @@ class EmbeddingService(BaseService):
             texts = [chunk["content"] for chunk in valid_chunks]
             
             # Generate embeddings
-            dense_embeddings_raw = self._get_embeddings_batch(texts)
+            dense_embeddings = self._get_embeddings_batch(texts)
             sparse_embeddings = self._get_sparse_embedding(texts)
 
             metadata = [
-                {"content": chunk["content"], "metadata": chunk.get("metadata", {})}
+                {
+                    **chunk.get("metadata", {}),
+                    "content": chunk["content"]
+                }
                 for chunk in valid_chunks
             ]
-        
+    
         return EmbeddingOutput(
-            dense_embeddings=dense_embeddings_raw,
+            dense_embeddings=dense_embeddings,
             sparse_embeddings=sparse_embeddings,
             metadata=metadata
         )
