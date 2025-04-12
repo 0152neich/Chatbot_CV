@@ -12,23 +12,23 @@ class TestQdrant(unittest.TestCase):
         self.settings = Settings()
         self.qdrant = Qdrant(settings=self.settings)
 
-    def test_add_embedding(self):
+    # def test_add_embedding(self):
         
-        dense_embedding=list(np.random.rand(768).tolist() for _ in range(20))
-        sparse_embedding = [
-            SparseEmbeddingData(
-                indices=(indices := np.random.choice(1000, size=np.random.randint(1, 11), replace=False).tolist()),
-                values=np.random.uniform(0, 1, len(indices)).tolist()
-            ) for _ in range(20)
-        ]
-        payload=[{'Header_3': 'DAO DUY CHIEN'} for _ in range(20)]
-        self.qdrant.insert(
-            inputs = QdrantInput(
-                dense_embedding=dense_embedding,
-                sparse_embedding=sparse_embedding,
-                metadata=payload
-            )
-        )
+    #     dense_embedding=list(np.random.rand(768).tolist() for _ in range(20))
+    #     sparse_embedding = [
+    #         SparseEmbeddingData(
+    #             indices=(indices := np.random.choice(1000, size=np.random.randint(1, 11), replace=False).tolist()),
+    #             values=np.random.uniform(0, 1, len(indices)).tolist()
+    #         ) for _ in range(20)
+    #     ]
+    #     payload=[{'Header_3': 'DAO DUY CHIEN'} for _ in range(20)]
+    #     self.qdrant.insert(
+    #         inputs = QdrantInput(
+    #             dense_embedding=dense_embedding,
+    #             sparse_embedding=sparse_embedding,
+    #             metadata=payload
+    #         )
+    #     )
 
     def test_search(self):
         
@@ -39,12 +39,12 @@ class TestQdrant(unittest.TestCase):
                 values=np.random.uniform(0, 1, len(indices)).tolist()
             )
         ]
-        user_name = 'DAO DUY CHIEN'
+        user_name = 'ĐÀO DUY CHIẾN'
         result = self.qdrant.query(
             dense_query=dense_query,
             sparse_query=sparse_query,
             user_name=user_name,
-            k=5
+            k=self.settings.retrieval.top_k
         )
         print(list(point.payload for point in result.points))    
 
