@@ -106,7 +106,7 @@ class Qdrant(BaseService):
                     # ],
                     query=dense_query, # float
                     using="dense",
-                    limit=10,
+                    limit=20,
                 ),
                 models.Prefetch(
                     query=models.SparseVector(
@@ -114,7 +114,7 @@ class Qdrant(BaseService):
                         values=sparse_query[0].values
                     ),
                     using="sparse",
-                    limit=10,
+                    limit=20,
                 ),
             ],
             query=models.FusionQuery(
@@ -129,6 +129,7 @@ class Qdrant(BaseService):
             using="dense",
             with_payload=True,
             limit=k,
+            score_threshold=0.1,
             query_filter=Filter(
                 should=filter_conditions,
             )
