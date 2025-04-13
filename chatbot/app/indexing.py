@@ -31,7 +31,7 @@ class IndexingService(BaseService):
     def _get_embedding(self) -> EmbeddingService:
         return EmbeddingService(settings=self.settings)
     
-    @property
+    @cached_property
     def _get_qdrant(self) -> Qdrant:
         return Qdrant(settings=self.settings)
     
