@@ -37,28 +37,37 @@ class GenerationService(BaseService):
                 streaming=True,
                 api_key=self.settings.generation.api_key,
             )
+        except Exception as e:
+            logger.error(f"Failed to initialize LLM: {str(e)}")
+            raise e
+        
+        retrieved_info_str = " ".join(
+            [
+                f"Content: {doc.get('content', 'N/A')}"
+                for doc in inputs.retrieved_info
+            ]
+        )
+
+        try:
             prompt = ChatPromptTemplate.from_messages([
-            ("system",
-                "Bạn là ChatbotAI chuyên dụng trả lời câu hỏi về CV dựa trên thông tin trong tài liệu."
-                "Trả lời chính xác và đầy đủ thông tin một cách tự nhiên."
-                "Nếu không có thông tin hoặc thông tin không liên quan, nói 'Không có thông tin trong CV.'"),
-            MessagesPlaceholder(variable_name="chat_history"),
-            ("human", "{retrieved_info}\nCâu hỏi: {input}")
+                ("system",
+                 "Bạn là ChatbotAI, một trợ lý thân thiện chuyên trả lời câu hỏi về CV."
+                 "Hãy trả lời tự nhiên, dễ hiểu, chỉ dùng thông tin từ tài liệu , bỏ ký hiệu thừa không cần thiết."
+                 "Dùng liên từ để câu văn mượt mà, ưu tiên thông tin liên quan đến câu hỏi."
+                 "Nếu không có thông tin phù hợp, hãy nói: 'Tôi không tìm thấy thông tin trong CV'"),
+                MessagesPlaceholder(variable_name="chat_history"),
+                ("human", "{retrieved_info}\nCâu hỏi: {input}")
             ])
-            retrieved_info_str = " ".join(
-                [
-                    f"Content: {doc.get('content', 'N/A')}"
-                    for doc in inputs.retrieved_info
-                ]
-            )
-            logger.info("Retrieved Info:", retrieved_info_str)
+
             chain = prompt | llm
             response = chain.invoke({
                 "input": inputs.query,
                 "chat_history": inputs.chat_history,
                 "retrieved_info": retrieved_info_str
             })
-            response = TextCleaner().clean_text(response.content)
-            return GenerationOutput(response=response)
+            cleaned_response = TextCleaner().clean_text(response.content)
         except Exception as e:
-            return GenerationOutput(response=f"Error: {str(e)}")
+            logger.error(f"Failed to generate response: {str(e)}")
+            raise e
+
+        return GenerationOutput(response=cleaned_response)
