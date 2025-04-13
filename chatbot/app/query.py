@@ -37,7 +37,7 @@ class ChatbotService(BaseService):
     def _get_generation(self) -> GenerationService:
         return GenerationService(settings=self.settings)
 
-    @property
+    @cached_property
     def _get_qdrant(self) -> Qdrant:
         return Qdrant(settings=self.settings)
     
@@ -75,7 +75,7 @@ class ChatbotService(BaseService):
             )
             logger.info("Information retrieved successfully.")
             if not retrieval_output.context:
-                return ChatbotOutput(response="Không tìm thấy thông tin CV liên quan. Bạn có muốn hỏi câu khác không?")
+                return ChatbotOutput(response="Không tìm thấy thông tin liên quan. Bạn có muốn hỏi câu khác không?")
         except Exception as e:
             logger.error(f"Error retrieving information: {e}")
             raise e
