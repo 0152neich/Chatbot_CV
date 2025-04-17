@@ -1,8 +1,10 @@
 import logging
+import os
 from functools import cached_property
 from domain.indexing import EmbeddingService
 from domain.indexing import EmbeddingInput
 from domain.indexing import Chunker
+from domain.indexing import ChunkInput
 from domain.indexing import DocumentProcessor
 
 from shared.base import BaseModel
@@ -12,6 +14,10 @@ from infrastructure.qdrant import Qdrant
 from infrastructure.qdrant import QdrantInput
 
 logger = logging.getLogger(__name__)
+
+class IndexingInput(BaseModel):
+    raw_path: str
+    convert_path: str
 
 class IndexingOutput(BaseModel):
     status: bool
@@ -35,7 +41,7 @@ class IndexingService(BaseService):
     def _get_qdrant(self) -> Qdrant:
         return Qdrant(settings=self.settings)
     
-    def process(self) -> IndexingOutput:
+    def process(self, inputs: IndexingInput) -> IndexingOutput:
         """Process the input file and return the indexing output.
         
         Args:
@@ -46,15 +52,29 @@ class IndexingService(BaseService):
         """
         # Convert the file to text
         try:
-            text = self._get_convert.process_all()
+            success, output = self._get_convert.process_file(inputs.raw_path)
+            if not success:
+                logger.error("File conversion failed.")
+                raise ValueError("File conversion failed.")
             logger.info("File converted to text successfully.")
+            
+            os.makedirs(os.path.dirname(inputs.convert_path), exist_ok=True)
+            with open(inputs.convert_path, 'w', encoding='utf-8') as f:
+                f.write(output)
+            logger.info(f"Markdown file saved to {inputs.convert_path}")
         except Exception as e:
             logger.error(f"Error processing file: {e}")
             raise e
         
         # Chunk the text
         try:
-            chunks_output = self._get_chunker.process()
+            chunks_output = self._get_chunker.process(
+                inputs=ChunkInput(
+                    convert_path=inputs.convert_path
+                )
+            )
+            if not chunks_output.chunks:
+                logger.error("Chunk is empty")
             logger.info("Text chunked successfully.")
         except Exception as e:
             logger.error(f"Error chunking text: {e}")

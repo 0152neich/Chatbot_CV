@@ -10,7 +10,7 @@ from fastapi import File
 from api.helpers.exception_handler import ResponseMessage
 from shared.settings import Settings
 from app.indexing import IndexingService
-from config import DATA_RAW
+from app.indexing import IndexingInput
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,6 +20,7 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+settings = Settings()
 
 indexing = APIRouter(prefix="/v1")
 
@@ -109,19 +110,20 @@ async def indexing_file(inputs: UploadFile = File(...)):
             detail=ResponseMessage.UNPROCESSABLE_ENTITY,
         )
     
-    file_path = os.path.join(DATA_RAW, inputs.filename)
-    os.makedirs(DATA_RAW, exist_ok=True)
+    raw_path = os.path.join(settings.indexing.raw_path, inputs.filename)
+    convert_path = os.path.join(settings.indexing.convert_path, os.path.splitext(inputs.filename)[0] + '.md')
+    os.makedirs(settings.indexing.raw_path, exist_ok=True)
     
     # Check if the directory exists
     try:
         # save to DATA_RAW
-        with open(file_path, 'wb') as f:
+        with open(raw_path, 'wb') as f:
             content = await inputs.read()
             f.write(content)
         await inputs.close()
-        logger.info(f"File saved successfully to {file_path}")
+        logger.info(f"File saved successfully to {raw_path}")
     except Exception as e:
-        logger.error(f"Error writing file to {file_path}: {e}")
+        logger.error(f"Error writing file to {raw_path}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ResponseMessage.INTERNAL_SERVER_ERROR,
@@ -129,7 +131,12 @@ async def indexing_file(inputs: UploadFile = File(...)):
 
     try:
         logger.info("Starting indexing process...")
-        indexing_output = indexing_service.process()
+        indexing_output = indexing_service.process(
+            inputs=IndexingInput(
+                raw_path=raw_path,
+                convert_path=convert_path
+            )
+        )
         return {
             "message": ResponseMessage.SUCCESS,
             "info": {

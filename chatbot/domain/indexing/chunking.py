@@ -1,4 +1,3 @@
-import re
 import os
 from typing import Any, Dict, List
 from langchain_text_splitters import RecursiveCharacterTextSplitter, MarkdownHeaderTextSplitter
@@ -6,21 +5,16 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter, MarkdownHea
 from shared.base import BaseModel
 from shared.base import BaseService
 from shared.settings import Settings
-from shared.state import StateManager
 from shared.clean_text import TextCleaner
-from config import STATE_FILE
+
+class ChunkInput(BaseModel):
+    convert_path: str
 
 class ChunkOutput(BaseModel):
     chunks: List[Dict[str, Any]]
 
 class Chunker(BaseService):
     settings: Settings
-
-    @property
-    def _get_state_manager(self) -> StateManager:
-        return StateManager(
-            state_file=STATE_FILE,
-        )
 
     def _get_markdown_headers(self, text: str) -> list[str]:
         """Get the headers from the Markdown text.
@@ -60,38 +54,28 @@ class Chunker(BaseService):
         )
         return recursive_splitter.split_text(text)
 
-    def process(self) -> ChunkOutput:
+    def process(self, inputs: ChunkInput) -> ChunkOutput:
         """Process the Markdown file by splitting based on headers and further chunking.
         
-        Returns:
-            list[str]: List of text chunks.
-        """
-        folder_path = self.settings.chunking.folder_path
-        if not os.path.isdir(folder_path):
-            raise FileNotFoundError(f"Folder not found: {folder_path}")
+        Args:
+            inputs (ChunkInput): Input containing the path to the Markdown file.
         
-        current_state = self._get_state_manager.get_folder_state(folder_path, file_extension='.md')
-        previous_state = self._get_state_manager.load_previous_state()
-
-        files_to_process = self._get_state_manager.get_new_files(current_state, previous_state)
-        if not files_to_process and previous_state:
-            return ChunkOutput(chunks=[])
+        Returns:
+            ChunkOutput: List of text chunks.
+        """
+        file_path = inputs.convert_path
+        if not os.path.isfile(file_path) or not file_path.lower().endswith('.md'):
+            raise FileNotFoundError(f"Invalid Markdown file: {file_path}")
 
         final_chunks = []
-        for filename in os.listdir(folder_path):
-            file_path = os.path.join(folder_path, filename)
-            if not os.path.isfile(file_path) or not filename.lower().endswith('.md'):
-                continue
-
-            try:
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-            except FileNotFoundError:
-                raise FileNotFoundError(f"File not found: {file_path}")
-            except Exception as e:
-                raise Exception(f"Error reading file {file_path}: {str(e)}")
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"File not found: {file_path}")
+        except Exception as e:
+            raise Exception(f"Error reading file {file_path}: {str(e)}")
         
-        content = TextCleaner.clean_text(content)
         header_docs = self._get_markdown_headers(content)
         
         for doc in header_docs:
@@ -103,9 +87,10 @@ class Chunker(BaseService):
                 if header_key in doc.metadata:
                     headers.append(doc.metadata[header_key])
             
-            header_str = " > ".join(headers) if headers else ""
+            header_str = " - ".join(headers) if headers else ""
             for chunk in chunks:
                 if chunk.strip():
+                    chunk = TextCleaner().clean_text(chunk)
                     content_with_header = f"{header_str}: {chunk}" if header_str else chunk
                     chunk_dict = {
                         "content": content_with_header,
@@ -114,7 +99,5 @@ class Chunker(BaseService):
                         }
                     }
                     final_chunks.append(chunk_dict)
-        if final_chunks:
-            self._get_state_manager.save_state(current_state)
         
         return ChunkOutput(chunks=final_chunks)
