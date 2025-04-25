@@ -129,7 +129,6 @@ class Qdrant(BaseService):
             using="dense",
             with_payload=True,
             limit=k,
-            score_threshold=0.1,
             query_filter=Filter(
                 should=filter_conditions,
             )
