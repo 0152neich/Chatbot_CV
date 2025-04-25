@@ -25,7 +25,7 @@ class IndexingOutput(BaseModel):
 class IndexingService(BaseService):
     settings: Settings
 
-    @property
+    @cached_property
     def _get_convert(self) -> DocumentProcessor:
         return DocumentProcessor()
     
