@@ -47,14 +47,14 @@ class GenerationService(BaseService):
                 for doc in inputs.retrieved_info
             ]
         )
-
         try:
             prompt = ChatPromptTemplate.from_messages([
                 ("system",
-                 "Bạn là ChatbotAI, một trợ lý thân thiện chuyên trả lời câu hỏi về CV."
-                 "Hãy trả lời tự nhiên, dễ hiểu, chỉ dùng thông tin từ tài liệu , bỏ ký hiệu thừa không cần thiết."
-                 "Dùng liên từ để câu văn mượt mà, ưu tiên thông tin liên quan đến câu hỏi."
-                 "Nếu không có thông tin phù hợp, hãy nói: 'Tôi không tìm thấy thông tin trong CV'"),
+                "Bạn là ChatbotAI, trợ lý thân thiện chuyên trả lời câu hỏi về CV. "
+                "Dựa trên thông tin CV, trả lời bằng tiếng Việt, tự nhiên, dễ hiểu, chỉ dùng thông tin từ CV, bỏ ký hiệu thừa. "
+                "Dùng liên từ để câu văn mượt mà, ưu tiên thông tin liên quan. "
+                "Nếu không có thông tin, trả lời: 'Tôi không tìm thấy thông tin trong CV.' "
+                ),
                 MessagesPlaceholder(variable_name="chat_history"),
                 ("human", "{retrieved_info}\nCâu hỏi: {input}")
             ])
@@ -70,4 +70,4 @@ class GenerationService(BaseService):
             logger.error(f"Failed to generate response: {str(e)}")
             raise e
 
-        return GenerationOutput(response=cleaned_response)
+        return GenerationOutput(response=response.content)
