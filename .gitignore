@@ -3,3 +3,6 @@ data/
 .vscode
 .env
 .history
+chatbot/shared/pg
+pg.py
+weights

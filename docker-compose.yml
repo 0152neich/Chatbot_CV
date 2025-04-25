@@ -1,18 +1,5 @@
 services:
-  qdrant:
-    image: qdrant/qdrant
-    ports:
-      - 6333:6333
-      - 6334:6334
-    networks:
-      - app-tier
-    volumes:
-      - qdrant_data:/qdrant/storage
-    environment:
-      - QDRANT_NAME=${QDRANT__NAME}
-      - QDRANT_VECTOR_SIZE=${QDRANT__VECTOR_SIZE}
-  
-  indexing:
+  chatbot:
     build: 
       context: chatbot
       dockerfile: Dockerfile
@@ -44,7 +31,34 @@ services:
       - GENERATION__MAX_TOKENS=${GENERATION__MAX_TOKENS}
       - GENERATION__API_KEY=${GENERATION__API_KEY}
       - RETRIEVAL__TOP_K=${RETRIEVAL__TOP_K}
-
+      - INDEXING__RAW_PATH=${INDEXING__RAW_PATH}
+      - INDEXING__CONVERT_PATH=${INDEXING__CONVERT_PATH}
+  frontend:
+    build: 
+      context: frontend
+      dockerfile: Dockerfile
+    ports:
+      - 8501:8501
+    networks:
+      - app-tier
+    volumes:
+      - type: bind
+        source: ./frontend
+        target: /app
+    command: ["streamlit", "run", "app.py"]
+  qdrant:
+    image: qdrant/qdrant
+    ports:
+      - 6333:6333
+      - 6334:6334
+    networks:
+      - app-tier
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT_NAME=${QDRANT__NAME}
+      - QDRANT_VECTOR_SIZE=${QDRANT__VECTOR_SIZE}
+      
 networks:
   app-tier:
     driver: bridge
